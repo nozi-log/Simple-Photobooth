@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Your 4-Cut Photo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'ari-w9500', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Background Element */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/bg-el.png') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 30px;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .template-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 3/4;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .template-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .photo-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 2;
+        }
+
+        /* Layout size classes */
+        .layout-small .photo-slot {
+            margin: 5px;
+        }
+        .layout-medium .photo-slot {
+            margin: 10px;
+        }
+        .layout-large .photo-slot {
+            margin: 15px;
+        }
+
+        .photo-slot {
+            background-color: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .photo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Controls Section */
+        .controls-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 400px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 80%;
+            margin-right: 200px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #000000;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            background-color: #9c9c9c;
+            transform: scale(1.02);
+        }
+
+        /* Footer */
+        footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .preview-section, .controls-section {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .controls {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .controls-section {
+                padding-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Element -->
+    <div class="background"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="template-container" id="template-container">
+                <img class="template-pattern" id="template-pattern" src="" alt="">
+                <div class="photo-grid" id="photo-grid">
+                    <div class="photo-slot"><img id="photo-1"></div>
+                    <div class="photo-slot"><img id="photo-2"></div>
+                    <div class="photo-slot"><img id="photo-3"></div>
+                    <div class="photo-slot"><img id="photo-4"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Background Type</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="bg-type-color" name="bg-type" value="color" checked>
+                            <label for="bg-type-color">Color</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="bg-type-image" name="bg-type" value="image">
+                            <label for="bg-type-image">Image</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="bg-type-pattern" name="bg-type" value="pattern">
+                            <label for="bg-type-pattern">Pattern</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group" id="bg-color-group">
+                    <label for="bg-color">Background Color</label>
+                    <input type="color" id="bg-color" value="#ffffff">
+                </div>
+
+                <div class="control-group" id="bg-image-group" style="display: none;">
+                    <label for="bg-image">Background Image</label>
+                    <input type="file" id="bg-image" accept="image/*">
+                </div>
+
+                <div class="control-group" id="bg-pattern-group" style="display: none;">
+                    <label for="bg-pattern">Background Pattern</label>
+                    <select id="bg-pattern">
+                        <option value="none" selected>None</option>
+                        <option value="pinky">Pinky</option>
+                        <option value="star-heart">Star Heart</option>
+                        <option value="grid">Grid</option>
+                        <option value="greeny">Greeny</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="border-color">Border Color</label>
+                    <input type="color" id="border-color" value="transparent">
+                </div>
+
+                <div class="control-group">
+                    <label>Layout Size</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="layout-small" name="layout-size" value="small">
+                            <label for="layout-small">Small</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="layout-medium" name="layout-size" value="medium" checked>
+                            <label for="layout-medium">Medium</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="layout-large" name="layout-size" value="large">
+                            <label for="layout-large">Large</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="download-btn" id="download-btn">DOWNLOAD PHOTO</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // DOM Elements
+        const templateContainer = document.getElementById('template-container');
+        const photoGrid = document.getElementById('photo-grid');
+        const bgColorPicker = document.getElementById('bg-color');
+        const borderColorPicker = document.getElementById('border-color');
+        const bgPatternSelect = document.getElementById('bg-pattern');
+        const templatePattern = document.getElementById('template-pattern');
+        const downloadBtn = document.getElementById('download-btn');
+        const bgImageInput = document.getElementById('bg-image');
+        const bgTypeRadios = document.querySelectorAll('input[name="bg-type"]');
+        const bgColorGroup = document.getElementById('bg-color-group');
+        const bgImageGroup = document.getElementById('bg-image-group');
+        const bgPatternGroup = document.getElementById('bg-pattern-group');
+        const layoutSizeRadios = document.querySelectorAll('input[name="layout-size"]');
+        
+        // Background image variables
+        let customBgImage = null;
+        let patternLoaded = false;
+        
+        // Load photos from localStorage
+        const capturedPhoto = localStorage.getItem('capturedPhoto');
+        
+        if (capturedPhoto) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                
+                const slots = [
+                    { id: 1, x: 0.10, y: 0.15, width: 0.35, height: 0.35 },
+                    { id: 2, x: 0.55, y: 0.15, width: 0.35, height: 0.35 },
+                    { id: 3, x: 0.10, y: 0.55, width: 0.35, height: 0.35 },
+                    { id: 4, x: 0.55, y: 0.55, width: 0.35, height: 0.35 }
+                ];
+                
+                slots.forEach(slot => {
+                    const slotCanvas = document.createElement('canvas');
+                    slotCanvas.width = img.width * slot.width;
+                    slotCanvas.height = img.height * slot.height;
+                    const slotCtx = slotCanvas.getContext('2d');
+                    
+                    slotCtx.drawImage(
+                        canvas,
+                        img.width * slot.x, img.height * slot.y,
+                        img.width * slot.width, img.height * slot.height,
+                        0, 0,
+                        slotCanvas.width, slotCanvas.height
+                    );
+                    
+                    const photoElement = document.getElementById(`photo-${slot.id}`);
+                    photoElement.src = slotCanvas.toDataURL('image/png');
+                });
+            };
+            img.src = capturedPhoto;
+        }
+        
+        // Background type change
+        bgTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === 'color') {
+                    bgColorGroup.style.display = 'block';
+                    bgImageGroup.style.display = 'none';
+                    bgPatternGroup.style.display = 'none';
+                    templatePattern.style.display = 'none';
+                    customBgImage = null;
+                    templateContainer.style.backgroundImage = 'none';
+                    templateContainer.style.backgroundColor = bgColorPicker.value;
+                } else if (radio.value === 'image') {
+                    bgColorGroup.style.display = 'none';
+                    bgImageGroup.style.display = 'block';
+                    bgPatternGroup.style.display = 'none';
+                    templatePattern.style.display = 'none';
+                } else if (radio.value === 'pattern') {
+                    bgColorGroup.style.display = 'none';
+                    bgImageGroup.style.display = 'none';
+                    bgPatternGroup.style.display = 'block';
+                }
+            });
+        });
+        
+        // Background color change
+        bgColorPicker.addEventListener('input', () => {
+            if (document.getElementById('bg-type-color').checked) {
+                templateContainer.style.backgroundColor = bgColorPicker.value;
+                templateContainer.style.backgroundImage = 'none';
+            }
+        });
+        
+        // Background image upload
+        bgImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customBgImage = new Image();
+                    customBgImage.onload = function() {
+                        templateContainer.style.backgroundImage = `url(${event.target.result})`;
+                        templateContainer.style.backgroundSize = 'cover';
+                        templateContainer.style.backgroundPosition = 'center';
+                        templateContainer.style.backgroundColor = 'transparent';
+                    };
+                    customBgImage.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Background pattern change
+        bgPatternSelect.addEventListener('change', () => {
+            const pattern = bgPatternSelect.value;
+            
+            if (pattern === 'none') {
+                templatePattern.style.display = 'none';
+                patternLoaded = false;
+            } else {
+                templatePattern.style.display = 'block';
+                templatePattern.onload = function() {
+                    patternLoaded = true;
+                };
+                templatePattern.onerror = function() {
+                    patternLoaded = false;
+                    console.error("Failed to load pattern image");
+                };
+                templatePattern.src = `assets/pattern/${pattern}.jpg`;
+                templatePattern.style.opacity = '0.7';
+            }
+        });
+        
+        // Border color change
+        borderColorPicker.addEventListener('input', () => {
+            const slots = document.querySelectorAll('.photo-slot');
+            slots.forEach(slot => {
+                if (borderColorPicker.value === 'transparent') {
+                    slot.style.border = 'none';
+                } else {
+                    slot.style.border = `2px solid ${borderColorPicker.value}`;
+                }
+            });
+        });
+        
+        // Layout size change
+        layoutSizeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                photoGrid.className = 'photo-grid';
+                if (radio.value !== 'medium') {
+                    photoGrid.classList.add(`layout-${radio.value}`);
+                }
+            });
+        });
+        
+        // Download functionality
+        downloadBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const containerRect = templateContainer.getBoundingClientRect();
+            canvas.width = containerRect.width;
+            canvas.height = containerRect.height;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw background based on selected type
+            const bgType = document.querySelector('input[name="bg-type"]:checked').value;
+            
+            if (bgType === 'color') {
+                // Draw background color
+                ctx.fillStyle = bgColorPicker.value;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (bgType === 'image' && customBgImage) {
+                // Draw custom background image
+                ctx.drawImage(customBgImage, 0, 0, canvas.width, canvas.height);
+            } else if (bgType === 'pattern' && templatePattern.style.display !== 'none' && patternLoaded) {
+                // Draw pattern background
+                ctx.drawImage(templatePattern, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Default white background if nothing selected
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Draw photos
+            const photoSlots = document.querySelectorAll('.photo-slot');
+            photoSlots.forEach((slot) => {
+                const img = slot.querySelector('img');
+                if (img && img.src) {
+                    const rect = slot.getBoundingClientRect();
+                    const containerRect = templateContainer.getBoundingClientRect();
+                    
+                    const x = rect.left - containerRect.left;
+                    const y = rect.top - containerRect.top;
+                    const width = rect.width;
+                    const height = rect.height;
+                    
+                    ctx.drawImage(img, x, y, width, height);
+                    
+                    // Draw border if selected
+                    if (borderColorPicker.value !== 'transparent') {
+                        ctx.strokeStyle = borderColorPicker.value;
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, width, height);
+                    }
+                }
+            });
+            
+            // Trigger download
+            const link = document.createElement('a');
+            link.download = '4cut-photobooth.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Initialize with default values
+        templateContainer.style.backgroundColor = bgColorPicker.value;
+        const slots = document.querySelectorAll('.photo-slot');
+        slots.forEach(slot => {
+            slot.style.border = 'none';
+        });
+    });
+</script>
+</body>
+<footer>
+    <p>by Nozi.</p>
+</footer>
+</html>

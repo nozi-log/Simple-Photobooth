@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth Capture</title>
+    <style>
+        /* Main Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'ari-w9500', sans-serif;
+            background-color: #ffffff;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Background Element */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/bg-el.png') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.7;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-container {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            aspect-ratio: 3/4;
+        }
+
+        .photo-previews {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .photo-preview {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            background-color: #ddd;
+            box-sizing: border-box;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: white;
+        }
+
+        /* Camera Section */
+        .camera-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            background-color: #333;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        #capture-btn, #retake-btn {
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        #capture-btn {
+            background: #000000;
+            color: white;
+        }
+
+        #capture-btn:hover {
+            background: #bbbcbb;
+            transform: scale(1.05);
+        }
+
+        #retake-btn {
+            background: #ffb1d2;
+            color: white;
+            display: none;
+        }
+
+        #retake-btn:hover {
+            background: #c4aaaa;
+            transform: scale(1.05);
+        }
+
+        /* Timer */
+        .timer {
+            font-size: 1.8rem;
+            margin: 15px 0;
+            color: #000000;
+            text-shadow: 0 0 10px rgba(146, 146, 146, 0.5);
+            display: none;
+        }
+
+        /* Progress */
+        .progress {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #000000;
+        }
+
+        /* Slot Highlight */
+        .slot-highlight {
+            position: absolute;
+            border: 3px dashed rgb(85, 85, 85);
+            pointer-events: none;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        /* Footer */
+        footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .preview-section, .camera-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Element -->
+    <div class="background"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="preview-container">
+                <div class="photo-previews" id="photo-previews"></div>
+                <div class="slot-highlight" id="slot-highlight"></div>
+            </div>
+        </div>
+        
+        <!-- Camera Section -->
+        <div class="camera-section">
+            <div class="progress" id="progress">Photo 1 of 4</div>
+            <div class="timer" id="timer">5</div>
+            <div class="camera-preview">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+            <div class="controls">
+                <button id="capture-btn">CLICK!</button>
+                <button id="retake-btn">RETAKE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // DOM Elements
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const captureBtn = document.getElementById('capture-btn');
+            const retakeBtn = document.getElementById('retake-btn');
+            const timerDisplay = document.getElementById('timer');
+            const progressDisplay = document.getElementById('progress');
+            const photoPreviews = document.getElementById('photo-previews');
+            const slotHighlight = document.getElementById('slot-highlight');
+            const previewContainer = document.querySelector('.preview-container');
+            
+            // Canvas context
+            const ctx = canvas.getContext('2d');
+            
+            // Define the 4 slots with aspect ratio
+            const slots = [
+                { id: 1, x: 10, y: 15, width: 35, height: 35, aspectRatio: 3/4 },
+                { id: 2, x: 55, y: 15, width: 35, height: 35, aspectRatio: 3/4 },
+                { id: 3, x: 10, y: 55, width: 35, height: 35, aspectRatio: 3/4 },
+                { id: 4, x: 55, y: 55, width: 35, height: 35, aspectRatio: 3/4 }
+            ];
+            
+            let currentSlot = 0;
+            let capturedPhotos = [];
+            let currentPhotoPreview = null;
+            
+            // Initialize camera with highest available resolution
+            async function initCamera() {
+                try {
+                    const constraints = {
+                        video: {
+                            facingMode: 'user',
+                            width: { ideal: 4096, min: 1280 },
+                            height: { ideal: 2160, min: 720 }
+                        }
+                    };
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = stream;
+                    
+                    // Get actual video dimensions after playback starts
+                    video.onloadedmetadata = () => {
+                        console.log(`Video resolution: ${video.videoWidth}x${video.videoHeight}`);
+                        updateUI();
+                    };
+                    
+                    await video.play();
+                } catch (err) {
+                    console.error("Camera error:", err);
+                    // Fallback to lower resolution if needed
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            video: { 
+                                facingMode: 'user',
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 }
+                            } 
+                        });
+                        video.srcObject = stream;
+                        await video.play();
+                        updateUI();
+                    } catch (fallbackErr) {
+                        alert("Could not access camera. Please enable camera permissions.");
+                    }
+                }
+            }
+            
+            // Update UI for current state
+            function updateUI() {
+                progressDisplay.textContent = `Photo ${currentSlot + 1} of 4`;
+                
+                if (currentSlot < 4) {
+                    // Highlight current slot
+                    const slot = slots[currentSlot];
+                    slotHighlight.style.width = `${slot.width}%`;
+                    slotHighlight.style.height = `${slot.height}%`;
+                    slotHighlight.style.left = `${slot.x}%`;
+                    slotHighlight.style.top = `${slot.y}%`;
+                    slotHighlight.style.display = 'block';
+                    
+                    // Update buttons
+                    captureBtn.style.display = 'block';
+                    retakeBtn.style.display = 'none';
+                    captureBtn.textContent = 'CLICK!';
+                } else {
+                    // All photos captured
+                    slotHighlight.style.display = 'none';
+                    captureBtn.textContent = 'FINISH';
+                    retakeBtn.style.display = 'block';
+                }
+            }
+            
+            // Start countdown and capture
+            function startCapture() {
+                captureBtn.disabled = true;
+                retakeBtn.disabled = true;
+                
+                let counter = 5;
+                timerDisplay.textContent = counter;
+                timerDisplay.style.display = 'block';
+                
+                const countdown = setInterval(() => {
+                    counter--;
+                    timerDisplay.textContent = counter;
+                    
+                    if (counter <= 0) {
+                        clearInterval(countdown);
+                        timerDisplay.style.display = 'none';
+                        takePhoto();
+                    }
+                }, 1000);
+            }
+            
+            // Capture photo with high quality
+            function takePhoto() {
+                // Set canvas to video's native resolution
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Capture image (mirrored back to normal)
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width * -1, canvas.height);
+                ctx.restore();
+                
+                // Get image data without quality loss
+                const imageData = canvas.toDataURL('image/jpeg', 0.95);
+                
+                // Store captured photo
+                capturedPhotos.push({
+                    slot: currentSlot,
+                    imageData: imageData
+                });
+                
+                // Show preview
+                showPhotoPreview(currentSlot, imageData);
+                
+                // Move to next slot
+                currentSlot++;
+                updateUI();
+                
+                // Enable buttons
+                captureBtn.disabled = false;
+                retakeBtn.disabled = false;
+                
+                // If all slots filled, show retake option
+                if (currentSlot >= 4) {
+                    retakeBtn.style.display = 'block';
+                }
+            }
+            
+            // Show photo preview with proper aspect ratio
+            function showPhotoPreview(slotIndex, imageData) {
+                const slot = slots[slotIndex];
+                const containerWidth = previewContainer.offsetWidth;
+                const containerHeight = previewContainer.offsetHeight;
+                
+                // Create preview element
+                const preview = document.createElement('div');
+                preview.className = 'photo-preview';
+                preview.style.left = `${slot.x}%`;
+                preview.style.top = `${slot.y}%`;
+                preview.style.width = `${slot.width}%`;
+                preview.style.height = `${slot.height}%`;
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = imageData;
+                img.style.objectFit = 'contain';
+                img.style.backgroundColor = 'white';
+                
+                preview.appendChild(img);
+                photoPreviews.appendChild(preview);
+                currentPhotoPreview = preview;
+            }
+            
+            // Retake photos
+            function retakePhotos() {
+                currentSlot = 0;
+                capturedPhotos = [];
+                photoPreviews.innerHTML = '';
+                updateUI();
+            }
+            
+            // Finish and save final image with high quality
+            function finishCapture() {
+                if (capturedPhotos.length < 4) return;
+                
+                // Create final canvas at high resolution
+                const finalCanvas = document.createElement('canvas');
+                const targetWidth = 3000;
+                const targetHeight = Math.round(targetWidth * (4/3));
+                finalCanvas.width = targetWidth;
+                finalCanvas.height = targetHeight;
+                const finalCtx = finalCanvas.getContext('2d');
+                
+                // Fill background
+                finalCtx.fillStyle = 'white';
+                finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+                
+                // Draw all captured photos maintaining aspect ratio
+                capturedPhotos.forEach(photo => {
+                    const slot = slots[photo.slot];
+                    const img = new Image();
+                    img.src = photo.imageData;
+                    
+                    // Calculate positions and dimensions
+                    const slotWidth = finalCanvas.width * (slot.width / 100);
+                    const slotHeight = finalCanvas.height * (slot.height / 100);
+                    
+                    const x = finalCanvas.width * (slot.x / 100);
+                    const y = finalCanvas.height * (slot.y / 100);
+                    
+                    // Draw image maintaining aspect ratio
+                    finalCtx.save();
+                    finalCtx.beginPath();
+                    finalCtx.rect(x, y, slotWidth, slotHeight);
+                    finalCtx.clip();
+                    
+                    // Calculate dimensions to maintain aspect ratio
+                    let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+                    
+                    const imgAspect = img.width / img.height;
+                    const slotAspect = slotWidth / slotHeight;
+                    
+                    if (imgAspect > slotAspect) {
+                        // Image is wider than slot
+                        drawHeight = slotHeight;
+                        drawWidth = slotHeight * imgAspect;
+                        offsetX = (slotWidth - drawWidth) / 2;
+                    } else {
+                        // Image is taller than slot
+                        drawWidth = slotWidth;
+                        drawHeight = slotWidth / imgAspect;
+                        offsetY = (slotHeight - drawHeight) / 2;
+                    }
+                    
+                    finalCtx.drawImage(img, x + offsetX, y + offsetY, drawWidth, drawHeight);
+                    finalCtx.restore();
+                    
+                    // Add border
+                    finalCtx.strokeStyle = 'rgba(0,0,0,0.1)';
+                    finalCtx.lineWidth = 2;
+                    finalCtx.strokeRect(x, y, slotWidth, slotHeight);
+                });
+                
+                // Save and redirect
+                const finalImage = finalCanvas.toDataURL('image/jpeg', 0.95);
+                localStorage.setItem('capturedPhoto', finalImage);
+                window.location.href = 'download.html';
+            }
+            
+            // Event Listeners
+            captureBtn.addEventListener('click', () => {
+                if (currentSlot < 4) {
+                    startCapture();
+                } else {
+                    finishCapture();
+                }
+            });
+            
+            retakeBtn.addEventListener('click', retakePhotos);
+            
+            // Initialize
+            initCamera();
+        });
+    </script>
+</body>
+<footer>
+    <p>by Nozi.</p>
+</footer>
+</html>

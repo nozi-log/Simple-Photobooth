@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Template</title>
+    <style>
+        /* Main Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'ari-w9500', sans-serif; /* Fallback font */
+            background-color: #ffffff;
+            color: white;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background Element */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/bg-el.png') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        /* Content Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Template Card */
+        .template-card {
+            background: rgba(214, 232, 255, 0.5);
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .template-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 4-Cuts Template Grid */
+        .four-cuts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .cut {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 2px dashed rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        /* Capture Button */
+        .cta-button {
+            display: inline-block;
+            background: #000000;
+            color: #ffffff;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            background: #c5c5c5;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .template-card {
+                padding: 20px;
+            }
+            .four-cuts-grid {
+                height: 250px;
+                margin-bottom: 20px;
+            }
+            .cta-button {
+                padding: 10px 25px;
+                font-size: 1rem;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Element -->
+    <div class="background"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="template-card" data-template="citron">
+            <!-- 4-Cuts Template Preview -->
+            <div class="four-cuts-grid">
+                <div class="cut">Photo 1</div>
+                <div class="cut">Photo 2</div>
+                <div class="cut">Photo 3</div>
+                <div class="cut">Photo 4</div>
+            </div>
+            
+            <!-- Capture Button -->
+            <a href="capture.html" class="cta-button">CAPTURE NOW</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Store template selection when clicking the card or button
+            const templateCard = document.querySelector('.template-card');
+            const ctaButton = document.querySelector('.cta-button');
+            
+            // Handle template selection
+            templateCard.addEventListener('click', () => {
+                localStorage.setItem('selectedTemplate', 'citron');
+            });
+            
+            // Ensure button click doesn't trigger card click
+            ctaButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                localStorage.setItem('selectedTemplate', 'citron');
+            });
+        });
+    </script>
+</body>
+<footer>
+    <p>by Nozi.</p>
+</footer>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoBooth by Nozi</title>
+    <style>
+        body.landing {
+            background: #ffffff;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'ari-w9500', sans-serif;
+            text-align: center;
+        }
+
+        .landing main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .title-image {
+            width: 80%;
+            max-width: 900px;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            background: rgb(0, 0, 0);
+            color: rgb(255, 255, 255);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            margin-top: 50px;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .title-image {
+                width: 90%;
+            }
+            
+            .cta-button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="landing">
+    <main>
+        <img src="assets/images/title.png" alt="PHOTOBOOTH by nozi" class="title-image">
+        <a href="templates.html" class="cta-button">START NOW</a>
+    </main>
+</body>
+<footer>
+    <p>by Nozi.</p>
+</footer>
+</html>
